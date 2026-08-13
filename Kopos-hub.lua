@@ -7,16 +7,21 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "KoposHub"
 gui.ResetOnSpawn = false
 
--- Compatibilidad para Delta y ejecutores (CoreGui / gethui)
-local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
-gui.Parent = (gethui and gethui()) or (success and coreGui) or player:WaitForChild("PlayerGui")
+-- Asignación segura del Parent (evita fallos de permisos en Delta)
+local setParentSuccess = pcall(function()
+    gui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+end)
+
+if not setParentSuccess or not gui.Parent then
+    gui.Parent = player:WaitForChild("PlayerGui")
+end
 
 -- BOTÓN PERSISTENTE (Nunca se oculta)
 local openButton = Instance.new("TextButton")
 openButton.Name = "ToggleButton"
 openButton.Size = UDim2.new(0, 130, 0, 40)
 openButton.Position = UDim2.new(0, 20, 0, 20)
-openButton.Text = "☰ KOPOS HUB"
+openButton.Text = "KOPOS HUB"
 openButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 openButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 openButton.Font = Enum.Font.SourceSansBold
@@ -43,14 +48,14 @@ menuCorner.Parent = menu
 -- Mostrar / Ocultar Menú
 openButton.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
-    openButton.Text = menu.Visible and "✕ CERRAR" or "☰ KOPOS HUB"
+    openButton.Text = menu.Visible and "CERRAR" or "KOPOS HUB"
 end)
 
 -- Botón Go To Sky
 local skyButton = Instance.new("TextButton")
 skyButton.Size = UDim2.new(1, -20, 0, 32)
 skyButton.Position = UDim2.new(0, 10, 0, 10)
-skyButton.Text = "☁️ Go To Sky (+100 Studs)"
+skyButton.Text = "Go To Sky (+100 Studs)"
 skyButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 skyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 skyButton.Font = Enum.Font.SourceSansBold
@@ -74,7 +79,7 @@ divider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 divider.BorderSizePixel = 0
 divider.Parent = menu
 
--- Creador de Sliders (Ruedita + Línea para pantalla táctil y ratón)
+-- Creador de Sliders
 local function createSlider(title, posX, posY, width, minVal, maxVal, defaultVal, callback)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0, width, 0, 20)
@@ -153,16 +158,14 @@ local function getHumanoid()
     return character:FindFirstChildOfClass("Humanoid")
 end
 
--- COLUMNA IZQUIERDA: Correr (0 a 1000)
-createSlider("⚡ Correr", 15, 60, 150, 0, 1000, 16, function(value)
+-- COLUMNA IZQUIERDA: Correr
+createSlider("Correr", 15, 60, 150, 0, 1000, 16, function(value)
     local hum = getHumanoid()
-    if hum then
-        hum.WalkSpeed = value
-    end
+    if hum then hum.WalkSpeed = value end
 end)
 
--- COLUMNA DERECHA: Salto (0 a 1000)
-createSlider("🦘 Salto", 205, 60, 150, 0, 1000, 50, function(value)
+-- COLUMNA DERECHA: Salto
+createSlider("Salto", 205, 60, 150, 0, 1000, 50, function(value)
     local hum = getHumanoid()
     if hum then
         hum.UseJumpPower = true
