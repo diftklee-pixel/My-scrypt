@@ -1,9 +1,9 @@
--- // KOPOS HUB - ELITE EDITION [RAYFIELD UI PRO] // --
+-- // KOPOS HUB - ELITE EDITION [FIXED FLY & TP BUTTON] // --
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Kopos Hub | Elite Pro",
+   Name = "Kopos Hub | Elite Pro v5",
    LoadingTitle = "Cargando Kopos Hub...",
    LoadingSubtitle = "by Diftklee",
    ConfigurationSaving = { Enabled = true, FileName = "KoposConfig" },
@@ -67,7 +67,7 @@ MainTab:CreateToggle({
    end,
 })
 
--- Sistema de Vuelo (Fly)
+-- Sistema de Vuelo (Fly) Reparado y Robusto
 local flying = false
 local bv, bg
 MainTab:CreateToggle({
@@ -77,34 +77,44 @@ MainTab:CreateToggle({
       flying = v
       local char = LocalPlayer.Character
       if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+      local hrp = char.HumanoidRootPart
+      local hum = char:FindFirstChildOfClass("Humanoid")
       
       if flying then
-         bv = Instance.new("BodyVelocity", char.HumanoidRootPart)
+         if hum then hum.PlatformStand = true end
+         bv = Instance.new("BodyVelocity", hrp)
          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
          bv.Velocity = Vector3.new(0, 0, 0)
          
-         bg = Instance.new("BodyGyro", char.HumanoidRootPart)
+         bg = Instance.new("BodyGyro", hrp)
          bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-         bg.CFrame = char.HumanoidRootPart.CFrame
+         bg.CFrame = hrp.CFrame
          
          task.spawn(function()
-            while flying and char and char:FindFirstChild("HumanoidRootPart") do
+            while flying and char and hrp.Parent do
                local cam = workspace.CurrentCamera
-               local moveDir = Vector3.new()
+               local moveDir = Vector3.new(0, 0, 0)
+               local speed = 50
+               
                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
-               bv.Velocity = moveDir * 50
+               if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+               if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+               
+               bv.Velocity = moveDir * speed
                bg.CFrame = cam.CFrame
                task.wait()
             end
             if bv then bv:Destroy() end
             if bg then bg:Destroy() end
+            if hum then hum.PlatformStand = false end
          end)
       else
          if bv then bv:Destroy() end
          if bg then bg:Destroy() end
+         if hum then hum.PlatformStand = false end
       end
    end,
 })
@@ -205,14 +215,25 @@ VisualsTab:CreateToggle({
 local PlayerList = {}
 for _, p in pairs(Players:GetPlayers()) do table.insert(PlayerList, p.Name) end
 
+local selectedPlayerName = ""
 local Dropdown = VisualsTab:CreateDropdown({
-   Name = "Teleportar a Jugador",
+   Name = "Seleccionar Jugador",
    Options = PlayerList,
    CurrentOption = "",
    Callback = function(Option)
-      local Target = Players:FindFirstChild(Option)
+      selectedPlayerName = Option
+   end,
+})
+
+VisualsTab:CreateButton({
+   Name = "Teleportar a Jugador Seleccionado",
+   Callback = function()
+      local Target = Players:FindFirstChild(selectedPlayerName)
       if Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
          LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame
+         Rayfield:Notify({Title = "Kopos Hub", Content = "Teletransportado a " .. Target.Name, Duration = 3})
+      else
+         Rayfield:Notify({Title = "Kopos Hub", Content = "Selecciona un jugador válido primero.", Duration = 3})
       end
    end,
 })
@@ -223,6 +244,7 @@ VisualsTab:CreateButton({
       PlayerList = {}
       for _, p in pairs(Players:GetPlayers()) do table.insert(PlayerList, p.Name) end
       Dropdown:Refresh(PlayerList)
+      Rayfield:Notify({Title = "Kopos Hub", Content = "Lista actualizada!", Duration = 2})
    end,
 })
 
