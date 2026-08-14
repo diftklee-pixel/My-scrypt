@@ -1,125 +1,105 @@
 --[[ 
-    ===========================================================================
-    KOPOS-HUB v31.0 - ELITE MODERN UI
-    MEJORAS: TWEENS, DRAGGABLE SMOOTH, SLIDERS PRECISOS
-    ===========================================================================
+    KOPOS HUB - ELITE v42.0 [STABLE EDITION]
+    Incluye: Sliders, Checkpoints, ClickTP, ESP, Noclip.
 ]]
 
+local CoreGui = (gethui and gethui()) or game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
--- // UTILS // --
-local function tween(obj, props, time)
-    TweenService:Create(obj, TweenInfo.new(time or 0.2), props):Play()
+-- // LIMPIEZA DE UI ANTIGUA // --
+if CoreGui:FindFirstChild("KoposHub") then CoreGui:FindFirstChild("KoposHub"):Destroy() end
+
+-- // UI BASE // --
+local ScreenGui = Instance.new("ScreenGui", CoreGui); ScreenGui.Name = "KoposHub"
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 300, 0, 400); Main.Position = UDim2.new(0.5, -150, 0.5, -200)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30); Main.Draggable = true; Main.Active = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- // HEADER // --
+local Header = Instance.new("Frame", Main); Header.Size = UDim2.new(1, 0, 0, 40); Header.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+local Title = Instance.new("TextLabel", Header); Title.Size = UDim2.new(1, 0, 1, 0); Title.Text = "KOPOS HUB ELITE"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.Font = Enum.Font.GothamBold; Title.BackgroundTransparency = 1
+
+-- // SCROLL CONTAINER // --
+local Scroll = Instance.new("ScrollingFrame", Main); Scroll.Size = UDim2.new(1, -10, 1, -50); Scroll.Position = UDim2.new(0, 5, 0, 45)
+Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 2; Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 5)
+
+-- // VARIABLES GLOBALES DE FUNCIONES // --
+local NoclipEnabled = false
+local ClickTPEnabled = false
+local SavedCFrame = nil
+
+-- // COMPONENTES // --
+local function CreateBtn(text, func)
+    local b = Instance.new("TextButton", Scroll); b.Size = UDim2.new(1, 0, 0, 35); b.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    b.Text = text; b.TextColor3 = Color3.fromRGB(255, 255, 255); b.Font = Enum.Font.Gotham; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
+    b.MouseButton1Click:Connect(func)
 end
 
-local function makeDraggable(gui)
-    local dragging, dragStart, startPos
-    gui.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = gui.Position
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
+local function CreateToggle(text, callback)
+    local t = false; local b = Instance.new("TextButton", Scroll); b.Size = UDim2.new(1, 0, 0, 35); b.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    b.Text = text; b.TextColor3 = Color3.fromRGB(200, 200, 200); b.Font = Enum.Font.Gotham; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
+    b.MouseButton1Click:Connect(function() t = not t; b.BackgroundColor3 = t and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(40, 40, 50); callback(t) end)
 end
 
--- // UI SETUP // --
-local gui = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
-gui.Name = "KoposHub"
-
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 400, 0, 300)
-main.Position = UDim2.new(0.5, -200, 0.5, -150)
-main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-main.Visible = true
-main.ClipsDescendants = true
-makeDraggable(main)
-
-local corner = Instance.new("UICorner", main); corner.CornerRadius = UDim.new(0, 12)
-local uiStroke = Instance.new("UIStroke", main); uiStroke.Color = Color3.fromRGB(0, 200, 255); uiStroke.Thickness = 2
-
--- // COMPONENTS FACTORY // --
-local function createSlider(parent, text, min, max, default, callback)
-    local frame = Instance.new("Frame", parent)
-    frame.Size = UDim2.new(1, -20, 0, 45); frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+local function CreateSlider(text, min, max, callback)
+    local f = Instance.new("Frame", Scroll); f.Size = UDim2.new(1, 0, 0, 45); f.BackgroundColor3 = Color3.fromRGB(40, 40, 50); Instance.new("UICorner", f).CornerRadius = UDim.new(0, 5)
+    local l = Instance.new("TextLabel", f); l.Size = UDim2.new(1, 0, 0, 20); l.Text = text; l.TextColor3 = Color3.fromRGB(255, 255, 255); l.BackgroundTransparency = 1
+    local bar = Instance.new("Frame", f); bar.Size = UDim2.new(0.9, 0, 0, 6); bar.Position = UDim2.new(0.05, 0, 0.6, 0); bar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    local fill = Instance.new("Frame", bar); fill.Size = UDim2.new(0, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1, 0, 0, 20); label.Position = UDim2.new(0, 10, 0, 5)
-    label.BackgroundTransparency = 1; label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.Text = text; label.Font = Enum.Font.GothamMedium; label.TextSize = 12; label.TextXAlignment = Enum.TextXAlignment.Left
-
-    local track = Instance.new("Frame", frame)
-    track.Size = UDim2.new(1, -20, 0, 6); track.Position = UDim2.new(0, 10, 0, 30)
-    track.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    Instance.new("UICorner", track).CornerRadius = UDim.new(0, 3)
-
-    local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(0, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-    Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 3)
-
-    local button = Instance.new("TextButton", track)
-    button.Size = UDim2.new(0, 12, 0, 12); button.Position = UDim2.new(0, -6, 0.5, -6)
-    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255); button.Text = ""
-    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
-
-    local dragging = false
-    button.MouseButton1Down:Connect(function() dragging = true end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local mousePos = mouse.X
-            local trackPos = track.AbsolutePosition.X
-            local trackSize = track.AbsoluteSize.X
-            local percent = math.clamp((mousePos - trackPos) / trackSize, 0, 1)
-            fill.Size = UDim2.new(percent, 0, 1, 0)
-            button.Position = UDim2.new(percent, -6, 0.5, -6)
-            local value = math.floor(min + (percent * (max - min)))
-            callback(value)
-        end
-    end)
+    local function move(input)
+        local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(pos, 0, 1, 0)
+        callback(math.floor(min + (pos * (max - min))))
+    end
+    bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then move(input) end end)
 end
 
--- // MAIN PAGE // --
-local scroll = Instance.new("ScrollingFrame", main)
-scroll.Size = UDim2.new(1, -10, 1, -40); scroll.Position = UDim2.new(0, 5, 0, 35)
-scroll.BackgroundTransparency = 1; scroll.ScrollBarThickness = 2
-Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 8)
+-- // LÓGICA DE FEATURES // --
+CreateSlider("Velocidad (WalkSpeed)", 16, 250, function(v) if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = v end end)
+CreateSlider("Salto (JumpPower)", 50, 500, function(v) if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.JumpPower = v end end)
 
--- // IMPLEMENTACIÓN // --
--- Velocidad
-createSlider(scroll, "WalkSpeed", 16, 150, 16, function(v)
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = v
+CreateToggle("Noclip", function(v) NoclipEnabled = v end)
+CreateToggle("Click TP (Ctrl + Click)", function(v) ClickTPEnabled = v end)
+
+CreateBtn("Guardar Checkpoint", function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        SavedCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+        print("Checkpoint guardado")
     end
 end)
 
--- Salto
-createSlider(scroll, "JumpPower", 50, 1000, 50, function(v)
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.JumpPower = v
+CreateBtn("Ir al Checkpoint", function()
+    if SavedCFrame and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = SavedCFrame
     end
 end)
 
--- Botón Cerrar
-local close = Instance.new("TextButton", main)
-close.Size = UDim2.new(0, 30, 0, 30); close.Position = UDim2.new(1, -35, 0, 5)
-close.Text = "X"; close.TextColor3 = Color3.fromRGB(255, 50, 50); close.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
-close.MouseButton1Click:Connect(function() main.Visible = false end)
+-- // BUCLE DE PROCESAMIENTO // --
+RunService.Stepped:Connect(function()
+    if NoclipEnabled and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
 
-print("Kopos Hub v31 Cargado Correctamente")
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if ClickTPEnabled and input.UserInputType == Enum.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        local pos = Mouse.Hit.Position
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+        end
+    end
+end)
+
+print("Kopos Hub Cargado Correctamente")
+
