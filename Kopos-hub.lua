@@ -1,7 +1,7 @@
 --[[ 
     ===========================================================================
-    KOPOS-HUB - ELITE MODERN EDITION v30.0
-    THEME: HAJIMO KASHIMO (GOD OF LIGHTNING) - ZIYA UI STYLE
+    KOPOS-HUB - ELITE MODERN EDITION v30.1 (CORREGIDO)
+    THEME: HAJIME KASHIMO (GOD OF LIGHTNING) - ZIYA UI STYLE
     ===========================================================================
 ]]
 
@@ -40,7 +40,7 @@ CreateLightningAura(main)
 local mainCorner = Instance.new("UICorner", main)
 mainCorner.CornerRadius = UDim.new(0, 10)
 
--- Top Header (Estilo Ziya UI)
+-- Top Header
 local topBar = Instance.new("Frame", main)
 topBar.Size = UDim2.new(1, 0, 0, 36)
 topBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
@@ -59,7 +59,6 @@ titleLbl.TextSize = 13
 titleLbl.BackgroundTransparency = 1
 titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 
--- Botón Cerrar (X)
 local closeBtn = Instance.new("TextButton", topBar)
 closeBtn.Size = UDim2.new(0, 32, 0, 32)
 closeBtn.Position = UDim2.new(1, -36, 0, 2)
@@ -70,7 +69,7 @@ closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 14
 closeBtn.MouseButton1Click:Connect(function() main.Visible = false end)
 
--- // 3. CATEGORY SELECTOR (PILL STYLE) // --
+-- // 3. CATEGORY SELECTOR // --
 local catContainer = Instance.new("Frame", main)
 catContainer.Size = UDim2.new(1, -20, 0, 36)
 catContainer.Position = UDim2.new(0, 10, 0, 46)
@@ -89,7 +88,7 @@ local function createCategoryPill(name, defaultActive)
     pill.Size = UDim2.new(0, 95, 1, 0)
     pill.BackgroundColor3 = defaultActive and Color3.fromRGB(0, 160, 255) or Color3.fromRGB(30, 30, 40)
     pill.Text = name
-    pill.TextColor3 = defaultActive and Color3.fromRGB(255, 255, 255) else Color3.fromRGB(170, 170, 190)
+    pill.TextColor3 = defaultActive and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(170, 170, 190)
     pill.Font = Enum.Font.GothamMedium
     pill.TextSize = 11
     
@@ -122,9 +121,8 @@ local pageMovement = createPage()
 local pageCombat = createPage()
 local pageVisuals = createPage()
 local pageMisc = createPage()
-pageMovement.Visible = true -- Por defecto
+pageMovement.Visible = true
 
--- Selector de pestañas lógica
 local pill1 = createCategoryPill("Movement", true)
 local pill2 = createCategoryPill("Combat", false)
 local pill3 = createCategoryPill("Visuals", false)
@@ -146,7 +144,7 @@ pill2.MouseButton1Click:Connect(function() switchPage(pill2, pageCombat) end)
 pill3.MouseButton1Click:Connect(function() switchPage(pill3, pageVisuals) end)
 pill4.MouseButton1Click:Connect(function() switchPage(pill4, pageMisc) end)
 
--- // 5. UI COMPONENTS (ESTILO MODERNO ZIYA) // --
+-- // 5. UI COMPONENTS // --
 local function addToggle(page, text, callback)
     local item = Instance.new("Frame", page)
     item.Size = UDim2.new(1, 0, 0, 38)
