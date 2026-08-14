@@ -1,15 +1,13 @@
 --[[ 
     ===========================================================================
-    KOPOS-HUB - THE DEFINITIVE MASTER EDITION v25.0
-    THEME: HAJIME KASHIMO (GOD OF LIGHTNING) - ULTIMATE CULLING GAME
-    FEATURES: ESP | NOCLIP | HITBOX EXPANDER | CHECKPOINTS | ANTI-LAG | ANIMATIONS
+    KOPOS-HUB - ULTIMATE COMPACT MOBILE EDITION v27.0
+    THEME: HAJIME KASHIMO (GOD OF LIGHTNING) - PERFECT SCALING
     ===========================================================================
 ]]
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 
@@ -27,37 +25,43 @@ local function CreateLightningAura(obj)
     end)
 end
 
--- // 2. UI FACTORY // --
+-- // 2. UI FACTORY (PERFECT MOBILE PROPORTIONS) // --
 local gui = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
 gui.Name = "KoposHubGui"
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 650, 0, 750)
-main.Position = UDim2.new(0.5, -325, 0.5, -375)
+main.Size = UDim2.new(0, 360, 0, 280) -- Tamaño ultra compacto y proporcionado
+main.Position = UDim2.new(0.5, -180, 0.5, -140)
 main.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 main.Visible = false
 main.Draggable = true
 CreateLightningAura(main)
 
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 10)
+
 local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 50)
+title.Size = UDim2.new(1, 0, 0, 32)
 title.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-title.Text = "⚡ KOPOS-HUB - GOD OF LIGHTNING ⚡"
+title.Text = "⚡ KOPOS-HUB ⚡"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 20
+title.TextSize = 13
 
--- // 3. CONTAINER & GRID // --
+local titleCorner = Instance.new("UICorner", title)
+titleCorner.CornerRadius = UDim.new(0, 10)
+
+-- // 3. CONTAINER & SCROLLING GRID // --
 local scroll = Instance.new("ScrollingFrame", main)
-scroll.Size = UDim2.new(1, -20, 1, -90)
-scroll.Position = UDim2.new(0, 10, 0, 60)
+scroll.Size = UDim2.new(1, -10, 1, -42)
+scroll.Position = UDim2.new(0, 5, 0, 38)
 scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 15, 0)
-scroll.ScrollBarThickness = 8
+scroll.CanvasSize = UDim2.new(0, 0, 2.8, 0)
+scroll.ScrollBarThickness = 4
 
 local layout = Instance.new("UIGridLayout", scroll)
-layout.CellSize = UDim2.new(0, 190, 0, 60)
-layout.CellPadding = UDim2.new(0, 10, 0, 10)
+layout.CellSize = UDim2.new(0, 165, 0, 30) -- Botones pequeños en dos columnas perfectas
+layout.CellPadding = UDim2.new(0, 8, 0, 6)
 
 -- // 4. MODULES IMPLEMENTATION // --
 local noclipEnabled = false
@@ -151,34 +155,35 @@ local function toggleAntiLag(active)
     end
 end
 
--- // 5. BUILD INTERFACE SECTIONS & BUTTONS // --
+-- // 5. BUILD INTERFACE BUILDER // --
 local function createSectionTitle(text)
     local lbl = Instance.new("TextLabel", scroll)
-    lbl.Size = UDim2.new(1, 0, 0, 30)
+    lbl.Size = UDim2.new(1, 0, 0, 20)
     lbl.Text = "  " .. text
     lbl.TextColor3 = Color3.fromRGB(0, 255, 255)
     lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 10
     lbl.BackgroundTransparency = 1
     lbl.TextXAlignment = Enum.TextXAlignment.Left
 end
 
 local function createButton(name, color, callback)
     local btn = Instance.new("TextButton", scroll)
-    btn.Size = UDim2.new(0, 190, 0, 50)
+    btn.Size = UDim2.new(0, 165, 0, 30)
     btn.Text = name
     btn.BackgroundColor3 = color or Color3.fromRGB(30, 30, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
+    btn.TextSize = 10
     
     local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 6)
     
     btn.MouseButton1Click:Connect(callback)
     return btn
 end
 
-createSectionTitle("--- MOVEMENT & PHYSICS ---")
+createSectionTitle("--- MOVEMENT ---")
 createButton("Speed Boost", Color3.fromRGB(52, 152, 219), function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         player.Character.Humanoid.WalkSpeed = 50
@@ -219,7 +224,7 @@ local antiLagBtn = createButton("Toggle Anti-Lag", Color3.fromRGB(46, 204, 113),
     antiLagBtn.BackgroundColor3 = antiLagActive and Color3.fromRGB(39, 174, 96) or Color3.fromRGB(46, 204, 113)
 end)
 
-createSectionTitle("--- EMOTES & ANIMATIONS ---")
+createSectionTitle("--- EMOTES ---")
 createButton("Dance 1", Color3.fromRGB(155, 89, 182), function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         local anim = Instance.new("Animation")
@@ -236,35 +241,25 @@ createButton("Wave Emote", Color3.fromRGB(155, 89, 182), function()
         track:Play()
     end
 end)
-createButton("Stop All Anims", Color3.fromRGB(192, 57, 43), function()
+createButton("Stop Anims", Color3.fromRGB(192, 57, 43), function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
         for _, t in pairs(player.Character.Humanoid:GetPlayingAnimationTracks()) do t:Stop() end
     end
 end)
 
--- // 6. LOGGING FOOTER // --
-local logger = Instance.new("TextLabel", main)
-logger.Size = UDim2.new(1, 0, 0, 30)
-logger.Position = UDim2.new(0, 0, 1, -30)
-logger.Text = "KOPOS-HUB READY - GOD OF LIGHTNING EDITION"
-logger.TextColor3 = Color3.fromRGB(0, 255, 255)
-logger.Font = Enum.Font.Code
-logger.TextSize = 12
-logger.BackgroundTransparency = 1
-
--- // 7. TOGGLE BUTTON // --
+-- // 6. FLOATING TOGGLE BUTTON // --
 local toggleGui = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
 local openBtn = Instance.new("TextButton", toggleGui)
-openBtn.Size = UDim2.new(0, 50, 0, 50)
-openBtn.Position = UDim2.new(0, 50, 0, 50)
+openBtn.Size = UDim2.new(0, 40, 0, 40)
+openBtn.Position = UDim2.new(0, 20, 0, 100)
 openBtn.Text = "⚡"
 openBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 openBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 openBtn.Font = Enum.Font.GothamBold
-openBtn.TextSize = 22
+openBtn.TextSize = 18
 
 local toggleCorner = Instance.new("UICorner", openBtn)
-toggleCorner.CornerRadius = UDim.new(0, 25)
+toggleCorner.CornerRadius = UDim.new(0, 20)
 
 openBtn.MouseButton1Click:Connect(function()
     main.Visible = not main.Visible
