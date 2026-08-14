@@ -1,9 +1,9 @@
--- // KOPOS HUB - ELITE EDITION [FIXED FLY & TP BUTTON] // --
+-- // KOPOS HUB - ELITE EDITION [FIXED TP SYSTEM] // --
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Kopos Hub | Elite Pro v5",
+   Name = "Kopos Hub | Elite Pro v6",
    LoadingTitle = "Cargando Kopos Hub...",
    LoadingSubtitle = "by Diftklee",
    ConfigurationSaving = { Enabled = true, FileName = "KoposConfig" },
@@ -27,276 +27,134 @@ local SavedPos = nil
 
 -- // 1. MOVEMENT & FLY // --
 MainTab:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {16, 250},
-   Increment = 1,
-   Suffix = "Speed",
-   CurrentValue = 16,
-   Callback = function(v)
-      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-         LocalPlayer.Character.Humanoid.WalkSpeed = v
-      end
-   end,
+   Name = "WalkSpeed", Range = {16, 250}, Increment = 1, Suffix = "Speed", CurrentValue = 16,
+   Callback = function(v) if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = v end end,
 })
 
 MainTab:CreateSlider({
-   Name = "JumpPower",
-   Range = {50, 500},
-   Increment = 1,
-   Suffix = "Power",
-   CurrentValue = 50,
-   Callback = function(v)
-      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-         LocalPlayer.Character.Humanoid.JumpPower = v
-      end
-   end,
+   Name = "JumpPower", Range = {50, 500}, Increment = 1, Suffix = "Power", CurrentValue = 50,
+   Callback = function(v) if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.JumpPower = v end end,
 })
 
-MainTab:CreateToggle({
-   Name = "Noclip",
-   CurrentValue = false,
-   Callback = function(v)
-      _G.Noclip = v
-      RunService.Stepped:Connect(function()
-         if _G.Noclip and LocalPlayer.Character then
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-               if part:IsA("BasePart") then part.CanCollide = false end
-            end
-         end
-      end)
-   end,
-})
-
--- Sistema de Vuelo (Fly) Reparado y Robusto
+-- Fly Reparado
 local flying = false
 local bv, bg
 MainTab:CreateToggle({
-   Name = "Volar (Fly)",
-   CurrentValue = false,
+   Name = "Volar (Fly)", CurrentValue = false,
    Callback = function(v)
       flying = v
       local char = LocalPlayer.Character
       if not char or not char:FindFirstChild("HumanoidRootPart") then return end
       local hrp = char.HumanoidRootPart
-      local hum = char:FindFirstChildOfClass("Humanoid")
-      
       if flying then
-         if hum then hum.PlatformStand = true end
-         bv = Instance.new("BodyVelocity", hrp)
-         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-         bv.Velocity = Vector3.new(0, 0, 0)
-         
-         bg = Instance.new("BodyGyro", hrp)
-         bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-         bg.CFrame = hrp.CFrame
-         
+         bv = Instance.new("BodyVelocity", hrp); bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.new(0,0,0)
+         bg = Instance.new("BodyGyro", hrp); bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge); bg.CFrame = hrp.CFrame
          task.spawn(function()
-            while flying and char and hrp.Parent do
-               local cam = workspace.CurrentCamera
-               local moveDir = Vector3.new(0, 0, 0)
-               local speed = 50
-               
-               if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
-               if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
-               if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
-               if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
-               if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-               if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
-               
-               bv.Velocity = moveDir * speed
-               bg.CFrame = cam.CFrame
-               task.wait()
+            while flying and hrp.Parent do
+               local cam = workspace.CurrentCamera; local moveDir = Vector3.new(0,0,0)
+               if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
+               if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
+               if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
+               if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
+               bv.Velocity = moveDir * 50; bg.CFrame = cam.CFrame; task.wait()
             end
-            if bv then bv:Destroy() end
-            if bg then bg:Destroy() end
-            if hum then hum.PlatformStand = false end
+            if bv then bv:Destroy() end; if bg then bg:Destroy() end
          end)
-      else
-         if bv then bv:Destroy() end
-         if bg then bg:Destroy() end
-         if hum then hum.PlatformStand = false end
-      end
+      else if bv then bv:Destroy() end; if bg then bg:Destroy() end end
    end,
 })
 
--- // 2. COMBAT & AIMLOCK // --
+-- // 2. COMBAT // --
 local aimlockEnabled = false
 CombatTab:CreateToggle({
-   Name = "Aimlock (Apunta al más cercano)",
-   CurrentValue = false,
-   Callback = function(v)
-      aimlockEnabled = v
-   end,
+   Name = "Aimlock", CurrentValue = false, Callback = function(v) aimlockEnabled = v end,
 })
 
 RunService.RenderStepped:Connect(function()
    if aimlockEnabled then
-      local closestPlayer = nil
-      local shortestDistance = math.huge
+      local closest = nil; local dist = math.huge
       for _, p in pairs(Players:GetPlayers()) do
-         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(p.Character.Head.Position)
             if onScreen then
-               local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-               if dist < shortestDistance then
-                  shortestDistance = dist
-                  closestPlayer = p
-               end
+               local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+               if d < dist then dist = d; closest = p end
             end
          end
       end
-      if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
-         workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closestPlayer.Character.Head.Position)
+      if closest and closest.Character:FindFirstChild("Head") then
+         workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closest.Character.Head.Position)
       end
    end
 end)
 
--- // 3. MACRO / AUTOCLICKER // --
-local macroEnabled = false
-local clickDelay = 0.05
-
+-- // 3. MACRO // --
 MacroTab:CreateToggle({
-   Name = "Auto Clicker (Macro)",
-   CurrentValue = false,
+   Name = "Auto Clicker", CurrentValue = false,
    Callback = function(v)
-      macroEnabled = v
+      _G.Macro = v
       task.spawn(function()
-         while macroEnabled do
-            pcall(function()
-               VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-               task.wait()
-               VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-            end)
-            task.wait(clickDelay)
+         while _G.Macro do
+            VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,0)
+            task.wait()
+            VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,0)
+            task.wait(0.05)
          end
       end)
    end,
 })
 
-MacroTab:CreateSlider({
-   Name = "Velocidad de Macro (CPS)",
-   Range = {1, 50},
-   Increment = 1,
-   Suffix = "CPS",
-   CurrentValue = 20,
-   Callback = function(v)
-      clickDelay = 1 / v
-   end,
-})
-
--- // 4. VISUALS & PLAYERS // --
+-- // 4. VISUALS & TP // --
 VisualsTab:CreateToggle({
-   Name = "Player ESP",
-   CurrentValue = false,
+   Name = "Player ESP", CurrentValue = false,
    Callback = function(v)
       _G.ESP = v
-      task.spawn(function()
-         while _G.ESP do
-            for _, p in pairs(Players:GetPlayers()) do
-               if p ~= LocalPlayer and p.Character then
-                  if not p.Character:FindFirstChild("KoposESP") then
-                     local h = Instance.new("Highlight", p.Character)
-                     h.Name = "KoposESP"
-                     h.FillColor = Color3.fromRGB(0, 255, 255)
-                  end
-               end
-            end
-            task.wait(1)
-         end
+      while _G.ESP do
          for _, p in pairs(Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("KoposESP") then
-               p.Character.KoposESP:Destroy()
+            if p ~= LocalPlayer and p.Character and not p.Character:FindFirstChild("KoposESP") then
+               local h = Instance.new("Highlight", p.Character); h.Name = "KoposESP"; h.FillColor = Color3.fromRGB(0, 255, 255)
             end
          end
-      end)
+         task.wait(1)
+      end
+      for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("KoposESP") then p.Character.KoposESP:Destroy() end end
    end,
 })
 
-local PlayerList = {}
-for _, p in pairs(Players:GetPlayers()) do table.insert(PlayerList, p.Name) end
-
-local selectedPlayerName = ""
+local selectedPlayer = nil
 local Dropdown = VisualsTab:CreateDropdown({
    Name = "Seleccionar Jugador",
-   Options = PlayerList,
-   CurrentOption = "",
-   Callback = function(Option)
-      selectedPlayerName = Option
-   end,
+   Options = {"Esperando lista..."},
+   Callback = function(Option) selectedPlayer = Option end,
 })
 
 VisualsTab:CreateButton({
-   Name = "Teleportar a Jugador Seleccionado",
+   Name = "Teleportar a Jugador",
    Callback = function()
-      local Target = Players:FindFirstChild(selectedPlayerName)
-      if Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
-         LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame
-         Rayfield:Notify({Title = "Kopos Hub", Content = "Teletransportado a " .. Target.Name, Duration = 3})
+      if selectedPlayer and Players:FindFirstChild(selectedPlayer) then
+         LocalPlayer.Character.HumanoidRootPart.CFrame = Players[selectedPlayer].Character.HumanoidRootPart.CFrame
       else
-         Rayfield:Notify({Title = "Kopos Hub", Content = "Selecciona un jugador válido primero.", Duration = 3})
+         Rayfield:Notify({Title = "Error", Content = "Selecciona un jugador en el menú primero.", Duration = 3})
       end
    end,
 })
 
 VisualsTab:CreateButton({
-   Name = "Actualizar Lista de Jugadores",
+   Name = "Actualizar Lista",
    Callback = function()
-      PlayerList = {}
-      for _, p in pairs(Players:GetPlayers()) do table.insert(PlayerList, p.Name) end
-      Dropdown:Refresh(PlayerList)
-      Rayfield:Notify({Title = "Kopos Hub", Content = "Lista actualizada!", Duration = 2})
+      local list = {}
+      for _, p in pairs(Players:GetPlayers()) do table.insert(list, p.Name) end
+      Dropdown:Refresh(list, true)
+      Rayfield:Notify({Title = "Kopos Hub", Content = "Lista actualizada", Duration = 2})
    end,
 })
 
--- // 5. MISC & GODMODE // --
-MiscTab:CreateToggle({
-   Name = "Godmode (Vida Infinita / HP Alto)",
-   CurrentValue = false,
-   Callback = function(v)
-      _G.Godmode = v
-   end,
-})
-
+-- // 5. MISC // --
+MiscTab:CreateToggle({ Name = "Godmode", CurrentValue = false, Callback = function(v) _G.Godmode = v end })
 RunService.Heartbeat:Connect(function()
    if _G.Godmode and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-      LocalPlayer.Character.Humanoid.MaxHealth = 999999
       LocalPlayer.Character.Humanoid.Health = 999999
    end
 end)
-
-MiscTab:CreateButton({
-   Name = "Guardar Checkpoint",
-   Callback = function()
-      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-         SavedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
-         Rayfield:Notify({Title = "Kopos Hub", Content = "Checkpoint Guardado!", Duration = 3})
-      end
-   end,
-})
-
-MiscTab:CreateButton({
-   Name = "Ir al Checkpoint",
-   Callback = function()
-      if SavedPos and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-         LocalPlayer.Character.HumanoidRootPart.CFrame = SavedPos
-      end
-   end,
-})
-
-MiscTab:CreateToggle({
-   Name = "Click TP (Ctrl + Click)",
-   CurrentValue = false,
-   Callback = function(v)
-      _G.ClickTP = v
-      UserInputService.InputBegan:Connect(function(input, gpe)
-         if not gpe and _G.ClickTP and input.UserInputType == Enum.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-            local pos = Mouse.Hit.Position
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-               LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
-            end
-         end
-      end)
-   end,
-})
 
 Rayfield:LoadConfiguration()
